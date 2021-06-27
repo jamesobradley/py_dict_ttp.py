@@ -1,0 +1,86 @@
+# textsfm path:  export NET_TEXTFSM='/home/jbradley/ntc-templates/ntc_templates'
+
+
+from netmiko import ConnectHandler
+from getpass import getpass
+from ttp import ttp 
+from pprint import pprint 
+from netmiko import Netmiko
+import sys
+
+def get_ips():
+    with open('/home/jbradley/iplist.txt') as iplist:
+    
+        # read the iplist file into variable iplist as a list type
+        iplist = iplist.readlines()
+        
+        #return the iplist file object to the main function
+        return(iplist)
+
+#---------------------------------------------------------------
+
+def iterate_iplist(iplist, username, password):
+
+    for host in iplist:
+                                    
+        net_connect = cisco_login(username, password, host)
+        
+        device_prompt = my_dvc_prompt(net_connect)
+		
+        sh_run = net_connect.send_command('show run')
+        
+#        vtp_status_outpt = net_connect.send_command('show vtp status',use_textfsm=True)
+        
+        print(sh_run)
+
+
+#---------------------------------------------------------------
+
+def get_usr_pswd():
+    username = input('username: ')
+    password = getpass()
+    
+    return(username, password)
+
+#---------------------------------------------------------------
+
+def cisco_login(username, password, ipaddr):
+    cisco = {
+        'device_type' : 'cisco_ios',
+        'host' : ipaddr,
+        'username' : username,
+        'password' : password,
+        'secret' : password,
+        }
+
+    net_connect = ConnectHandler(**cisco)
+    
+    net_connect.enable() 
+
+    # Return Device Object
+    return(net_connect)
+
+#---------------------------------------------------------------
+
+def my_dvc_prompt(net_connect):
+
+    device_prompt = net_connect.find_prompt()
+
+    print('This device: ', device_prompt)
+
+#---------------------------------------------------------------
+
+def main():
+    device_ips = get_ips()
+    print(device_ips)
+    
+    username, password = get_usr_pswd()
+    
+    iterate_iplist(device_ips, username, password)
+
+    
+#---------------------------------------------------------------
+
+if __name__ == "__main__":
+    # execute only if run as a script
+    main()
